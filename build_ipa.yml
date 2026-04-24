@@ -3,7 +3,6 @@ name: Build iOS IPA
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -16,23 +15,13 @@ jobs:
         with:
           xcode-version: '15.0'
 
-      - name: Create Dummy Project
-        run: |
-          mkdir -p AntiOverthink.xcodeproj
-          # This is a simplified build process for cloud CI
-          # In a real scenario, a full .xcodeproj is needed, but we're providing the source
-          echo "Building source files..."
-          
       - name: Build IPA
         run: |
-          # This is a placeholder for the actual build command
-          # Note: A real .xcodeproj folder is required for xcodebuild to work
-          echo "Compiling Share Screen for Saiwan..."
-          mkdir -p output
-          touch output/share-screen-for-saiwan.ipa
+          xcodebuild -project ios_project/AntiOverthink.xcodeproj -scheme AntiOverthink -archivePath AntiOverthink.xcarchive archive
+          xcodebuild -exportArchive -archivePath AntiOverthink.xcarchive -exportOptionsPlist exportOptions.plist -exportPath output
           
       - name: Upload IPA
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: share-screen-ipa
+          name: anti-overthink-ipa
           path: output/*.ipa
