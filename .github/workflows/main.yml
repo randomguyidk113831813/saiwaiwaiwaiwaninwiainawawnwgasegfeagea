@@ -1,4 +1,4 @@
-name: Build iOS IPA
+name: Build Real iOS App
 
 on:
   push:
@@ -12,16 +12,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build IPA
+      - name: Compile App Binary
         run: |
-          # Creating a REAL folder structure that Sideloadly accepts
+          # This compiles your App.swift into a real iOS executable
           mkdir -p Payload/ShareScreen.app
-          
-          # Create a dummy executable (essential for IPA validity)
-          echo "Dummy Executable" > Payload/ShareScreen.app/ShareScreen
-          chmod +x Payload/ShareScreen.app/ShareScreen
-          
-          # Create a more complete Info.plist
+          swiftc -target arm64-apple-ios15.0 \
+                 -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
+                 -framework SwiftUI -framework ReplayKit -framework UIKit \
+                 ios_project/App.swift -o Payload/ShareScreen.app/ShareScreen
+
+      - name: Create Info.plist
+        run: |
           cat <<EOF > Payload/ShareScreen.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -43,11 +44,14 @@ jobs:
               <true/>
               <key>MinimumOSVersion</key>
               <string>15.0</string>
+              <key>UILaunchStoryboardName</key>
+              <string>LaunchScreen</string>
           </dict>
           </plist>
           EOF
-          
-          # Zip into the IPA
+
+      - name: Package IPA
+        run: |
           zip -r share-screen-saiwan.ipa Payload
           mkdir -p output
           mv share-screen-saiwan.ipa output/
